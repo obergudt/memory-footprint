@@ -3,6 +3,10 @@ ProgressBar = require('progress')
 fs          = require "fs"
 path        = require "path"
 
+if not global?.gc 
+  console.log "Please start this program with node --expose-gc to allow manual garbage collection"
+  exit(2)
+
 # Load the file passed in the arguments object, check if there
 # are dependencies. Those will be loaded from the node_module
 # directory of the package file
@@ -55,6 +59,8 @@ checkMod = (index)->
       else 
         return 0
 
+    stats = finalStats
+
     results.push stats
 
     # New Run scheduled
@@ -66,22 +72,44 @@ checkMod = (index)->
       finalStats = []
       _.each _.keys(require.cache), (key) ->
         delete require.cache[key]   
+
+      global?.gc?()
+
       setTimeout ->
         checkMod(index)
       , runDelay
     else
-      console.log "\n"
+      # console.log "\n"
       aggregate = {}
+      sorted = []
+      
       for item in results[0]
         aggregate[item.name] = []
         for result in results
           for resultItem in result 
             if resultItem.name is item.name 
               aggregate[item.name].push resultItem.size 
+      
       for key,value of aggregate 
         value = (1/value.length)*value.reduce (p,c)->
-          p+c
-        console.log key,":",require("filesize")(value)
+          if p >= 0 and c > 0
+            return p+c
+          else 
+            return p
+        , 0
+        sorted.push
+          name : key 
+          size : value
+
+      sorted = sorted.sort (a,b)->
+        if a.size > b.size 
+          return -1
+        else if a.size < b.size 
+          return 1
+        else 
+          return 0
+      for item in sorted 
+        console.log item.name,":",require("filesize")(item.size or 0)
       process.exit(0)
 
   # The module needs to be measured
@@ -93,11 +121,14 @@ checkMod = (index)->
     # Load the module from the directory/node_modules of the 
     # package.json passed as an argument to --file
     try 
+      global.gc()
       initial = process.memoryUsage()
       m = require path.join relevantDir, "node_modules", mods[index] 
       loadedMods.push m
+
     # If it can't be loaded, we skip it
     catch e 
+      global.gc()
       bar.tick()
       checkMod(++index)
       return
@@ -113,7 +144,11 @@ checkMod = (index)->
       # to the stats collection for this run
       if moduleMeasureCount is 0 
         size = measurePoints.reduce (previousValue, currentValue) ->
-          previousValue + currentValue          
+          if previousValue >= 0 and currentValue > 0
+            return previousValue + currentValue          
+          else 
+            return previousValue
+        , 0
         finalStats.push 
           name : mods[index]
           size : size 
@@ -122,4 +157,5 @@ checkMod = (index)->
         clearInterval interval
     , measureInterval
 
+global.gc()
 checkMod(index)

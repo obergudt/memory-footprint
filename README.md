@@ -1,6 +1,6 @@
 # memory-footprint
 
-This tiny tool will scan a `package.json` files dependencies, load them one by one an measure the memory footprint of loading them.
+This tiny tool will scan a `package.json` files dependencies, load them one by one an measure the memory footprint of loading them. It will garbage collect before every load and after unloading. These figures may be inaccurate, but for the big picture, it's enough.
 
 ## As a binary
 

@@ -21,7 +21,7 @@
   },
   "scripts":{
     "prepublish":"coffee -c ./index.coffee",
-    "start":"coffee -c ./index.coffee && node ./index.js"
+    "start":"coffee -c ./index.coffee && node --expose-gc ./index.js"
     },
   "preferGlobal": "true",
   "bin": {
