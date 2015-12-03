@@ -1,0 +1,26 @@
+{
+  "name": "memory-footprint",
+  "version": "0.1.0",
+  "description": "Measure the mempry footprint of node.js modules",
+  "main": "index.js",
+  "author": "Arvid Kahl <arvid@obergudt.com>",
+  "license": "MIT",
+  "engines": {
+    "node": "^0.12.8"
+  },
+  "dependencies": {
+    "filesize": "^2.0.4",
+    "minimist": "^1.2.0",
+    "progress": "^1.1.8",
+    "underscore": "^1.8.3",
+    "coffee-script":"^1"
+  },
+  "scripts":{
+    "prepublish":"coffee -c ./index.coffee",
+    "start":"coffee -c ./index.coffee && node ./index.js"
+    },
+  "preferGlobal": "true",
+  "bin": {
+    "memory-footprint": "memory-footprint.js"
+  }
+}
