@@ -1,6 +1,6 @@
 {
   "name": "memory-footprint",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Measure the memory footprint of node.js modules",
   "main": "index.js",
   "author": "Arvid Kahl <arvid@obergudt.com>",
