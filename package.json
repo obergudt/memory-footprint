@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/arvidkahl/memory-footprint.git"
+    "url": "git://github.com/obergudt/memory-footprint.git"
   },  
   "dependencies": {
     "filesize": "^2.0.4",
