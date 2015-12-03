@@ -8,9 +8,9 @@ Run `memory-footprint path/to/package.json` or `memory-footprint --file path/to/
 
 ## Run locally
 
-Run `npm start path/to/package.json`
+Run `npm start path/to/package.json`.
 
-## All optiones
+## All options
 
 ### `--file path/to/package.json`
 
