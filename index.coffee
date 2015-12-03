@@ -7,7 +7,7 @@ path        = require "path"
 # are dependencies. Those will be loaded from the node_module
 # directory of the package file
 try 
-  relevantFile = argv.file or './package.json'
+  relevantFile = argv.file or if argv["_"].length is 1 then argv["_"][0] else './package.json'
   relevantDir = path.dirname relevantFile
   contents = fs.readFileSync relevantFile, 'utf8'
   c = JSON.parse contents
@@ -20,7 +20,6 @@ try
 catch e 
   console.log "Could not read Modules from file #{argv.file}"
   process.exit(1)
-
 
 finalStats = []
 loadedMods = []

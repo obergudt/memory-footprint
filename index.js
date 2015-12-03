@@ -11,7 +11,7 @@
   path = require("path");
 
   try {
-    relevantFile = argv.file || './package.json';
+    relevantFile = argv.file || (argv["_"].length === 1 ? argv["_"][0] : './package.json');
     relevantDir = path.dirname(relevantFile);
     contents = fs.readFileSync(relevantFile, 'utf8');
     c = JSON.parse(contents);
