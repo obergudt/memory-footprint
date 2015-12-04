@@ -2,6 +2,7 @@ argv        = require("minimist")(process.argv.slice(2))
 ProgressBar = require('progress')
 fs          = require "fs"
 path        = require "path"
+_           = require "underscore"
 
 if not global?.gc 
   console.log "Please start this program with node --expose-gc to allow manual garbage collection"
@@ -11,7 +12,7 @@ if not global?.gc
 # are dependencies. Those will be loaded from the node_module
 # directory of the package file
 try 
-  relevantFile = argv.file or if argv["_"].length is 1 then argv["_"][0] else './package.json'
+  relevantFile = argv.f or argv.file or if argv["_"].length is 1 then argv["_"][0] else './package.json'
   relevantDir = path.dirname relevantFile
   contents = fs.readFileSync relevantFile, 'utf8'
   c = JSON.parse contents
@@ -30,11 +31,16 @@ loadedMods = []
 results = []
 index = 0
 runs = 0
-measureInterval = parseInt(argv.interval,10) or 25
-measureCount = parseInt(argv.times,10) or 5
-runCount = parseInt(argv.runs,10) or 2
-runDelay = parseInt(argv.delay,10) or 1000
+measureInterval = parseInt(argv.i,10) or parseInt(argv.interval,10) or 25
+measureCount = parseInt(argv.t,10) or parseInt(argv.times,10) or 5
+runCount = parseInt(argv.r,10) or parseInt(argv.runs,10) or 2
+runDelay = parseInt(argv.d,10) or parseInt(argv.delay,10) or 1000
+calculationStrategy = argv.s or argv.strategy or "max"
 bar = new ProgressBar(':bar :percent (:etas left)', { total: mods.length*runCount })
+
+unless calculationStrategy in ["max"]
+  calculationStrategy = 'max'
+
 
 console.log """
 ================
@@ -72,7 +78,7 @@ checkMod = (index)->
       finalStats = []
       _.each _.keys(require.cache), (key) ->
         delete require.cache[key]   
-
+      mods = _.shuffle mods
       global?.gc?()
 
       setTimeout ->
@@ -91,12 +97,16 @@ checkMod = (index)->
               aggregate[item.name].push resultItem.size 
       
       for key,value of aggregate 
-        value = (1/value.length)*value.reduce (p,c)->
-          if p >= 0 and c > 0
-            return p+c
-          else 
-            return p
-        , 0
+        if calculationStrategy is 'max'
+          value = _.max value
+        else 
+          value = (1/value.length)*value.reduce (p,c)->
+            if p >= 0 and c > 0
+              return p+c
+            else 
+              return p
+          , 0
+
         sorted.push
           name : key 
           size : value
@@ -158,4 +168,5 @@ checkMod = (index)->
     , measureInterval
 
 global.gc()
+mods = _.shuffle mods
 checkMod(index)
