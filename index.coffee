@@ -4,25 +4,25 @@ fs          = require "fs"
 path        = require "path"
 _           = require "underscore"
 
-if not global?.gc 
+if not global?.gc
   console.log "Please start this program with node --expose-gc to allow manual garbage collection"
   exit(2)
 
 # Load the file passed in the arguments object, check if there
 # are dependencies. Those will be loaded from the node_module
 # directory of the package file
-try 
+try
   relevantFile = argv.f or argv.file or if argv["_"].length is 1 then argv["_"][0] else './package.json'
   relevantDir = path.dirname relevantFile
   contents = fs.readFileSync relevantFile, 'utf8'
   c = JSON.parse contents
-  
+
   # The mods array will retain all relevant module names
   mods = []
-  for key of c.dependencies 
+  for key of c.dependencies
     mods.push key
 
-catch e 
+catch e
   console.log "Could not read Modules from file #{argv.file}"
   process.exit(1)
 
@@ -52,17 +52,20 @@ Measuring every #{measureInterval}ms, #{measureCount} times.
 Running #{runCount} times with a #{runDelay}ms delay.
 """
 
+oldConsoleLog = console.log
+console.log = console.warn = console.error = ->
+
 # Measure the mod at the index in the mods array
 checkMod = (index)->
 
   # We have checked all mods. We will sort and calculate stats
   if index >= mods.length
     stats = finalStats.sort (a,b)->
-      if a.size > b.size 
+      if a.size > b.size
         return -1
-      else if a.size < b.size 
+      else if a.size < b.size
         return 1
-      else 
+      else
         return 0
 
     stats = finalStats
@@ -74,10 +77,10 @@ checkMod = (index)->
       _ = require "underscore"
       runs++
       index = 0
-      loadedMods = [] 
+      loadedMods = []
       finalStats = []
       _.each _.keys(require.cache), (key) ->
-        delete require.cache[key]   
+        delete require.cache[key]
       mods = _.shuffle mods
       global?.gc?()
 
@@ -88,37 +91,38 @@ checkMod = (index)->
       # console.log "\n"
       aggregate = {}
       sorted = []
-      
+
       for item in results[0]
         aggregate[item.name] = []
         for result in results
-          for resultItem in result 
-            if resultItem.name is item.name 
-              aggregate[item.name].push resultItem.size 
-      
-      for key,value of aggregate 
+          for resultItem in result
+            if resultItem.name is item.name
+              aggregate[item.name].push resultItem.size
+
+      for key,value of aggregate
         if calculationStrategy is 'max'
           value = _.max value
-        else 
+        else
           value = (1/value.length)*value.reduce (p,c)->
             if p >= 0 and c > 0
               return p+c
-            else 
+            else
               return p
           , 0
 
         sorted.push
-          name : key 
+          name : key
           size : value
 
       sorted = sorted.sort (a,b)->
-        if a.size > b.size 
+        if a.size > b.size
           return -1
-        else if a.size < b.size 
+        else if a.size < b.size
           return 1
-        else 
+        else
           return 0
-      for item in sorted 
+      console.log = oldConsoleLog
+      for item in sorted
         console.log item.name,":",require("filesize")(item.size or 0)
       process.exit(0)
 
@@ -128,42 +132,42 @@ checkMod = (index)->
     moduleMeasureCount = measureCount
     measurePoints = []
 
-    # Load the module from the directory/node_modules of the 
+    # Load the module from the directory/node_modules of the
     # package.json passed as an argument to --file
-    try 
+    try
       global.gc()
       initial = process.memoryUsage()
-      m = require path.join relevantDir, "node_modules", mods[index] 
+      m = require path.join relevantDir, "node_modules", mods[index]
       loadedMods.push m
 
     # If it can't be loaded, we skip it
-    catch e 
+    catch e
       global.gc()
       bar.tick()
       checkMod(++index)
       return
 
     interval = setInterval ->
-      
+
       loaded = process.memoryUsage()
       measurePoints.push loaded.rss - initial.rss
       moduleMeasureCount--
       initial = loaded
 
-      # After measuring, we add the increases/decreases and push 
+      # After measuring, we add the increases/decreases and push
       # to the stats collection for this run
-      if moduleMeasureCount is 0 
+      if moduleMeasureCount is 0
         size = measurePoints.reduce (previousValue, currentValue) ->
           if previousValue >= 0 and currentValue > 0
-            return previousValue + currentValue          
-          else 
+            return previousValue + currentValue
+          else
             return previousValue
         , 0
-        finalStats.push 
+        finalStats.push
           name : mods[index]
-          size : size 
+          size : size
         bar.tick()
-        checkMod(++index)      
+        checkMod(++index)
         clearInterval interval
     , measureInterval
 
