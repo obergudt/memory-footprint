@@ -1,6 +1,6 @@
 {
   "name": "memory-footprint",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Measure the memory footprint of node.js modules",
   "main": "index.js",
   "author": "Arvid Kahl <arvid@obergudt.com>",
@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/obergudt/memory-footprint.git"
-  },  
+  },
   "dependencies": {
     "filesize": "^2.0.4",
     "minimist": "^1.2.0",
